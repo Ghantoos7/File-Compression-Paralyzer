@@ -80,6 +80,40 @@ int parallel_compression_cores(const char *folderPath, int NB_CORES)
 }
 
 
+int parallel_compression_seq_cores(const char *folderPath, int NB_CORES)
+{
+    int filesCount = countFiles(folderPath);
+    char **filesList = listFiles(folderPath);
+
+    int task_num = filesCount / NB_CORES;
+    int remaining_files = filesCount % NB_CORES;
+
+    int T1 = time(NULL);
+
+    for (int i = 0; i < NB_CORES; i++)
+    {
+        int value = fork();
+        int start = i * task_num;
+        int end = (i == NB_CORES - 1) ? (start + task_num + remaining_files) : (start + task_num);
+
+        if (value == -1)
+        {
+            printf("Error\n");
+            exit(1);
+        }
+        else if (value == 0)
+        {
+            for (int j = start; j < end; j++)
+            {
+                char command[256];
+                sprintf(command, "gzip -k -f %s", filesList[j]);
+                system(command);
+            }
+            exit(0);
+        }
+    }
+
+
 
 int main(int argc, char **argv)
 {
@@ -88,6 +122,9 @@ int main(int argc, char **argv)
 
     printf("it took %d seconds to compres all those files (parralizing all)\n" , parrarel_compression_all(argv[1]));
 
-   
+    // printf("it took %d seconds to compres all those files (parralizing by cores) with %d cores\n" , parallel_compression_cores(argv[1],getNumCPUs()),getNumCPUs());
+
+    // printf("it took %d seconds to compres all those files (parralizing by cores sequetially) with %d cores\n", parallel_compression_seq_cores(argv[1], 12), 12);
+
     return 0;
 }
