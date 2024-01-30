@@ -66,3 +66,39 @@ char **listFiles(const char *folderPath)
     closedir(dir);
     return filesList;
 }
+
+
+
+void removeGzFiles(const char *folderPath)
+{
+    DIR *dir;
+    struct dirent *entry;
+
+    dir = opendir(folderPath);
+
+    if (dir == NULL)
+    {
+        printf("Error opening directory <%s>\n", folderPath);
+        return;
+    }
+
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (entry->d_type == DT_REG)
+        {
+            char *full_file_path = malloc((strlen(folderPath) + strlen(entry->d_name) + 5) * sizeof(char));
+            sprintf(full_file_path, "%s/%s", folderPath, entry->d_name);
+
+            if (strstr(entry->d_name, ".gz") != NULL)
+            {
+                remove(full_file_path);
+              
+            }
+
+            free(full_file_path);
+        }
+    }
+    closedir(dir);
+}
+
+
